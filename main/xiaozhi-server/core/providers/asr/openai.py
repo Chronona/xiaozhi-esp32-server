@@ -15,9 +15,12 @@ class ASRProvider(ASRProviderBase):
         self.interface_type = InterfaceType.NON_STREAM
         self.api_key = config.get("api_key")
         self.api_url = config.get("base_url")
-        self.model = config.get("model_name")        
+        self.model = config.get("model_name")
         self.output_dir = config.get("output_dir")
         self.delete_audio_file = delete_audio_file
+        self.language = config.get("language")
+        self.prompt = config.get("prompt")
+        self.response_format = config.get("response_format")
 
         os.makedirs(self.output_dir, exist_ok=True)
 
@@ -40,7 +43,12 @@ class ASRProvider(ASRProviderBase):
             data = {
                 "model": self.model
             }
-
+            if self.language:
+                data["language"] = self.language
+            if self.prompt:
+                data["prompt"] = self.prompt
+            if self.response_format:
+                data["response_format"] = self.response_format
 
             with open(file_path, "rb") as audio_file:  # 使用with语句确保文件关闭
                 files = {
