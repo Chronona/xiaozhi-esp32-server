@@ -23,6 +23,24 @@ class MemoryProvider(MemoryProviderBase):
         self.timeout = config.get("timeout", 5)
         self.role_id = config.get("role_id", "default")
 
+        logger.bind(tag=TAG).info(f"PersonalBrain memory provider initialized: {self.base_url}")
+        self._check_connection()
+
+    def _check_connection(self):
+        try:
+            r = self._get("/health")
+            r.raise_for_status()
+            data = r.json()
+            logger.bind(tag=TAG).info(
+                f"Personal Brain health check OK: conversations={data.get('counts', {}).get('conversations', '?')}, "
+                f"memories={data.get('counts', {}).get('memories', '?')}"
+            )
+        except Exception as e:
+            logger.bind(tag=TAG).warning(
+                f"Personal Brain is not reachable at {self.base_url}: {e}. "
+                "Conversations will not be saved until the API is started."
+            )
+
     def _post(self, path: str, payload: dict):
         url = f"{self.base_url}{path}"
         return requests.post(url, json=payload, timeout=self.timeout)
