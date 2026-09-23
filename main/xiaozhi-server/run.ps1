@@ -18,9 +18,15 @@ $python = ".\.venv\Scripts\python.exe"
 
 # 依存関係が不足している場合は自動インストールする
 & $python -c "import aioconsole" 2>&1 | Out-Null
-if ($LASTEXITCODE -ne 0) {
+$missing = -not $?
+if ($missing) {
     Write-Host "仮想環境に依存関係が見つかりません。requirements.txt をインストールします。" -ForegroundColor Yellow
-    uv pip install --python $python -r requirements.txt
+    try {
+        uv pip install --python $python -r requirements.txt
+    } catch {
+        Write-Host "uv が使えなかったため pip でインストールします。" -ForegroundColor Yellow
+        & $python -m pip install -r requirements.txt
+    }
 }
 
 & $python app.py
