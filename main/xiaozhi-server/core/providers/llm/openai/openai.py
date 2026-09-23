@@ -132,6 +132,7 @@ class LLMProvider(LLMProviderBase):
                         content = content.split("</think>")[-1]
                     if is_active:
                         yield content
+
         finally:
             responses.close()
 
@@ -162,12 +163,21 @@ class LLMProvider(LLMProviderBase):
         stream = self.client.chat.completions.create(**request_params)
 
         try:
+            is_active = True
             for chunk in stream:
                 if getattr(chunk, "choices", None):
                     delta = chunk.choices[0].delta
                     content = getattr(delta, "content", "")
                     tool_calls = getattr(delta, "tool_calls", None)
-                    yield content, tool_calls
+                    if content:
+                        if "<think>" in content:
+                            is_active = False
+                            content = content.split("<think>")[0]
+                        if "</think>" in content:
+                            is_active = True
+                            content = content.split("</think>")[-1]
+                    if is_active:
+                        yield content, tool_calls
                 elif isinstance(getattr(chunk, "usage", None), CompletionUsage):
                     usage_info = getattr(chunk, "usage", None)
                     logger.bind(tag=TAG).info(

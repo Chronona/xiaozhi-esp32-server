@@ -75,7 +75,6 @@ DIRECT_ANSWER_TOOL = {
     },
 }
 
-
 class ConnectionHandler:
     def __init__(
             self,
