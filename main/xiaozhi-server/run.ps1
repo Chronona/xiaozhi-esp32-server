@@ -13,4 +13,14 @@ $env:PYTHONUTF8 = "1"
 $OutputEncoding = [Console]::OutputEncoding = [Text.Encoding]::UTF8
 
 Set-Location $PSScriptRoot
-& ".\.venv\Scripts\python.exe" app.py
+
+$python = ".\.venv\Scripts\python.exe"
+
+# 依存関係が不足している場合は自動インストールする
+& $python -c "import aioconsole" 2>&1 | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "仮想環境に依存関係が見つかりません。requirements.txt をインストールします。" -ForegroundColor Yellow
+    uv pip install --python $python -r requirements.txt
+}
+
+& $python app.py
