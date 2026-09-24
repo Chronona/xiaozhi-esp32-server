@@ -17,15 +17,23 @@ Set-Location $PSScriptRoot
 $python = ".\.venv\Scripts\python.exe"
 
 # 依存関係が不足している場合は自動インストールする
-& $python -c "import aioconsole" 2>&1 | Out-Null
+# app.py が必要とする ainput まで含めて確認する
+& $python -c "from aioconsole import ainput" 2>&1 | Out-Null
 $missing = -not $?
 if ($missing) {
     Write-Host "仮想環境に依存関係が見つかりません。requirements.txt をインストールします。" -ForegroundColor Yellow
+    Write-Host "使用する Python: $(Resolve-Path $python)" -ForegroundColor DarkGray
     try {
         uv pip install --python $python -r requirements.txt
     } catch {
         Write-Host "uv が使えなかったため pip でインストールします。" -ForegroundColor Yellow
         & $python -m pip install -r requirements.txt
+    }
+    # 再確認
+    & $python -c "from aioconsole import ainput" 2>&1 | Out-Null
+    if (-not $?) {
+        Write-Error "依存関係のインストールに失敗しました。手動で .venv を作り直してください。"
+        exit 1
     }
 }
 
